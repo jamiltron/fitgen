@@ -1,0 +1,52 @@
+{% extends "layout.html" %}
+{% block body %}
+  <br>
+  <h2>Welcome to Fitgen!</h2>
+  <p>Hello and welcome to Fitgen! Fitgen is a workout randomizer. Although Fitgen's primary
+    purpose is being served, many features are still incomplete. Check back often!</p>
+  <form action="{{ url_for('random_workout') }}" method=post class=add-entry>
+      <dl>
+	<dt>Workout type:
+	<dd><input type=checkbox name="type" value="weights" checked/>Weights<br>
+	<dd><input type=checkbox name="type" value="bodyweight" />Bodyweight<br>
+	<dd><input type=checkbox name="type" value="cardio" />Cardio<br>
+	<br>
+        <dt>Muscle Area:
+        <dd><input type=radio name="muscles" value="both" checked />Full Body<br>
+        <dd><input type=radio name="muscles" value="upper" />Upper Body<br>
+        <dd><input type=radio name="muscles" value="lower" />Lower Body<br>
+	<br>
+	<dt>Number of exercises to add to workout:
+	<select name="num_exercises">
+	  <option value="1">1</option>
+	  <option value="2">2</option>
+	  <option value="3">3</option>
+	  <option value="4">4</option>
+	  <option value="5">5</option>
+	  <option value="6">6</option>
+	  <option value="7">7</option>
+	  <option value="8">8</option>
+	  <option value="9">9</option>
+	  <option value="10">10</option>
+	</select>
+	<br>
+	<br>
+	<dt>Exclude exercises that require the following equipment:
+	<dd><input type=checkbox name="equip" value="barbell" />Barbell + Weights<br>
+	<dd><input type=checkbox name="equip" value="dumbell" />Dumbells<br>
+	<dd><input type=checkbox name="equip" value="ketllebell" />Kettlebells<br>
+	<dd><input type=checkbox name="equip" value="bench" />Bench<br>
+	<dd><input type=checkbox name="equip" value="rack" />Power Rack<br>
+	<dd><input type=checkbox name="equip" value="pullup" />Pullup Bar<br>
+	<dd><input type=checkbox name="equip" value="box" />Box<br>
+	<dd><input type=checkbox name="equip" value="jumprope" />Jump-rope<br>
+	<dd><input type=checkbox name="equip" value="bike" />Bike<br>
+	<dd><input type=checkbox name="equip" value="rower" />Rowing Machine<br>
+	<dd><input type=checkbox name="equip" value="elliptical" />Elliptical Machine<br>
+	<dd><input type=checkbox name="equip" value="climber" />Stairs/Stair Machine<br>
+	<dd><input type=checkbox name="equip" value="pool" checked/>Swimming Pool<br>
+        <br>	
+        <dd><input type=submit value="Generate">
+      </dl>
+    </form>
+{% endblock %}
