@@ -47,14 +47,23 @@ def index():
 @app.route('/workout', methods=['POST'])
 def random_workout():    
     if request.method == 'POST':
+        upper = ['back', 'arms', 'chest']
+        lower = ['legs']
+        full =  upper + lower + ['core']
         try:
+            num = request.form['num_exercises']
             if request.form['muscles'] == 'upper':
-                exc = query_db('select workout_name from exercises where muscles = ? or muscles = ?', ['back', 'arms'], one=True)
+                print "in upper"
+                exc = query_db('select workout_name from exercises where muscles=? or muscles=? or muscles=? limit(?)', upper + [num], one=False)
             elif request.form['muscles'] == 'lower':
-                exc = query_db('select workout_name from exercises where id = ?', [1], one=True)
-            entries=[exc['workout_name']]
+                exc = query_db('select workout_name from exercises where muscles=? limit(?)', lower + [num], one=False)
+            else:
+                exc = query_db('select workout_name from exercises where muscles=? limit(?)', full + [num], one=False)
+            entries = []
+            for x in exc:
+                entries.append(x['workout_name'])
         except:
-            entries=["error raised"]
+            entries=["error_raised"]
     return render_template('show_exercises.html', entries=entries)
     
 
