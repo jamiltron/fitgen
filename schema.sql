@@ -4,6 +4,7 @@ create table users (
        login_name string not null,
        email string not null,
        password string not null,
+       user_role string not null,
        barbell integer,
        dumbell integer,
        ketllebell integer,
