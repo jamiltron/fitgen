@@ -1,6 +1,6 @@
 import sqlite3
-from flask import Flask, request, session, g, redirect, url_for, abort, \
-    render_template, flash
+from flask import Flask, request, session, g, redirect, url_for, \
+    abort, render_template, flash
 from contextlib import closing
 from random import randint
 
@@ -53,12 +53,11 @@ def random_workout():
         try:
             num = request.form['num_exercises']
             if request.form['muscles'] == 'upper':
-                print "in upper"
                 exc = query_db('select workout_name from exercises where muscles=? or muscles=? or muscles=? limit(?)', upper + [num], one=False)
             elif request.form['muscles'] == 'lower':
                 exc = query_db('select workout_name from exercises where muscles=? limit(?)', lower + [num], one=False)
             else:
-                exc = query_db('select workout_name from exercises where muscles=? limit(?)', full + [num], one=False)
+                exc = query_db('select workout_name from exercises where muscles=? or muscles=? or muscles=? or muscles=? or muscles=? limit(?)', full + [num], one=False)
             entries = []
             for x in exc:
                 entries.append(x['workout_name'])
@@ -66,6 +65,26 @@ def random_workout():
             entries=["error_raised"]
     return render_template('show_exercises.html', entries=entries)
     
+def build_query(muscles=0, types=0, equip=0, limit=1):
+    query = "select workout_name from exercises where "
+    for i in range(0, muscles):
+        if i != 0:
+            query += "or "
+        query += "muscles=? "
+    
+    if types > 0:
+        query += "and "
+    for i in range(0, types):
+        if i != 0:
+            query += "or "
+        query += "workout_type=? "
+    if len(equip) > 0:
+        query += "and "
+    for no in equip:
+        query += str(no) + " != 1 "
+
+    return query
+        
 
 if __name__ == '__main__':
     app.run()
