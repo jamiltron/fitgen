@@ -1,0 +1,13 @@
+TODO
++ Actually randomify query results (right now limit is imposed on selection)
++ Format results
++ Implement a method to put "optional" equipment for an exercise 
+  (such as dumbells or barbell for bench)
++ Learn SQAlchemy
++ Allow users to generate new workouts on /workout
++ Allow users to sign in and add preferences
++ Allow the declining of a workout from a generated list
++ Implement an "admin" screen to modify exercise lists more gracefully
++ Change the column "ketllebell" to "kettlebell"
++ Add more exercises
++ Add options for push/pull work generation
