@@ -72,10 +72,9 @@ def random_workout():
             except:
                 pass        
         try:
-            print "in final try"
-            num = request.form['num_exercises']
+            limit = request.form['num_exercises']
             query = build_query(muscle_dict[request.form['muscles']],
-                        type_include, equip_exclude, num)
+                        type_include, equip_exclude, limit)
             exc = query_db(query, one=False)
             entries = []
             for x in exc:
@@ -108,8 +107,7 @@ def build_query(muscles=[], types=[], equip=[], limit=1):
         query += ')'
     query += " limit " + str(limit) + ';'    
     print query
-    return query
-       
+    return query      
 
 if __name__ == '__main__':
     app.run()
