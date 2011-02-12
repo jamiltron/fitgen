@@ -104,8 +104,7 @@ def build_query(muscles=[], types=[], equip=[], limit=1):
             if i != 0:
                 query += " AND "
             query += equip[i] + " != 1" 
-        query += ')'
-    query += " limit " + str(limit) + ';'    
+        query += ') ORDER BY RANDOM() LIMIT ' + str(limit) + ";"
     print query
     return query      
 
