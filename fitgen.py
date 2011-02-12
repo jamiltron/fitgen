@@ -85,38 +85,31 @@ def random_workout():
     return render_template('show_exercises.html', entries=entries)
     
 def build_query(muscles=[], types=[], equip=[], limit=1):
-    query = "SELECT workout_name FROM exercises WHERE "
-    for i in range(0, len(muscles)):
+    query = "SELECT workout_name FROM exercises WHERE ("
+    
+    for i in range(0, len(muscles)):       
         if i != 0:
             query += " OR "
         query += "muscles='" + muscles[i] + "'"
+    query += ')'
     if len(types) > 0:
-        query += " AND "
-    for i in range(0, len(types)):
-        if i != 0:
-            query += " OR "
-        query += "workout_type='" + types[i] + "'"
-    print len(equip)
+        query += " AND ("
+        for i in range(0, len(types)):           
+            if i != 0:
+                query += " OR "
+            query += "workout_type='" + types[i] + "'"
+        query += ')'
     if len(equip) > 0:
-        query += "AND "
-    for i in range(0, len(equip)):
-        if i != 0:
-            query += " AND "
-        query += equip[i] + " != 1"
+        query += " AND ("
+        for i in range(0, len(equip)):
+            if i != 0:
+                query += " AND "
+            query += equip[i] + " != 1" 
+        query += ')'
     query += " limit " + str(limit) + ';'    
+    print query
     return query
-        
+       
 
 if __name__ == '__main__':
     app.run()
-
-
-
-
-
-#            if request.form['muscles'] == 'upper':
-#                exc = query_db('select workout_name from exercises where muscles=? or muscles=? or muscles=? limit(?)', upper + [num], one=False)
-#            elif request.form['muscles'] == 'lower':
-#                exc = query_db('select workout_name from exercises where muscles=? limit(?)', lower + [num], one=False)
-#            else:
-#                exc = query_db('select workout_name from exercises where muscles=? or muscles=? or muscles=? or muscles=? or muscles=? limit(?)', full + [num], one=False)
