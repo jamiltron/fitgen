@@ -90,14 +90,14 @@ def build_query(muscles=[], types=[], equip=[], limit=1):
         if i != 0:
             query += " OR "
         query += "muscles='" + muscles[i] + "'"
-    query += ')'
+    query += " OR muscles='other')"
     if len(types) > 0:
         query += " AND ("
         for i in range(0, len(types)):           
             if i != 0:
                 query += " OR "
             query += "workout_type='" + types[i] + "'"
-        query += ')'
+        query += ")"
     if len(equip) > 0:
         query += " AND ("
         for i in range(0, len(equip)):
