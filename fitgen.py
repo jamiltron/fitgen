@@ -6,12 +6,11 @@ from random import randint
 
 # configuration
 DATABASE = './fitgen.db'
-DEBUT = True
+DEBUG = True
 SECRET_KEY = 'development key'
 USERNAME = 'admin'
 PASSWORD = 'password'
 
-# create our little application
 app = Flask(__name__)
 app.config.from_object(__name__)
 app.config.from_envvar('FITGEN_SETTINGS', silent=True)
@@ -47,17 +46,37 @@ def index():
 @app.route('/workout', methods=['POST'])
 def random_workout():    
     if request.method == 'POST':
-        upper = ['back', 'arms', 'chest']
-        lower = ['legs']
-        full =  upper + lower + ['core']
+        equip_list = ['barbell', 'dumbell', 'ketllebell', 'bench',
+                      'rack', 'pullup', 'box', 'jumprope', 'bike',
+                      'rower', 'elliptical', 'climber', 'pool']
+        equip_exclude = []
+        muscle_dict = {"upper": ['back', 'arms', 'chest'],
+                       "lower": ['legs'],
+                       "full": ['back', 'arms', 'chest', 'legs', 'core']}
+        type_list = ['weights', 'bodyweight', 'cardio']
+        type_include = []
+        
+        # build the list of equipment to exclude
+        for x in equip_list:
+            try:
+                if request.form[x]:
+                    pass
+            except:
+                equip_exclude.append(x)
+
+        # build list of types to include
+        for x in type_list:
+            try:
+                if request.form[x]:
+                    type_include.append(x)
+            except:
+                pass        
         try:
+            print "in final try"
             num = request.form['num_exercises']
-            if request.form['muscles'] == 'upper':
-                exc = query_db('select workout_name from exercises where muscles=? or muscles=? or muscles=? limit(?)', upper + [num], one=False)
-            elif request.form['muscles'] == 'lower':
-                exc = query_db('select workout_name from exercises where muscles=? limit(?)', lower + [num], one=False)
-            else:
-                exc = query_db('select workout_name from exercises where muscles=? or muscles=? or muscles=? or muscles=? or muscles=? limit(?)', full + [num], one=False)
+            query = build_query(muscle_dict[request.form['muscles']],
+                        type_include, equip_exclude, num)
+            exc = query_db(query, one=False)
             entries = []
             for x in exc:
                 entries.append(x['workout_name'])
@@ -65,24 +84,26 @@ def random_workout():
             entries=["error_raised"]
     return render_template('show_exercises.html', entries=entries)
     
-def build_query(muscles=0, types=0, equip=0, limit=1):
-    query = "select workout_name from exercises where "
-    for i in range(0, muscles):
+def build_query(muscles=[], types=[], equip=[], limit=1):
+    query = "SELECT workout_name FROM exercises WHERE "
+    for i in range(0, len(muscles)):
         if i != 0:
-            query += "or "
-        query += "muscles=? "
-    
-    if types > 0:
-        query += "and "
-    for i in range(0, types):
+            query += " OR "
+        query += "muscles='" + muscles[i] + "'"
+    if len(types) > 0:
+        query += " AND "
+    for i in range(0, len(types)):
         if i != 0:
-            query += "or "
-        query += "workout_type=? "
+            query += " OR "
+        query += "workout_type='" + types[i] + "'"
+    print len(equip)
     if len(equip) > 0:
-        query += "and "
-    for no in equip:
-        query += str(no) + " != 1 "
-
+        query += "AND "
+    for i in range(0, len(equip)):
+        if i != 0:
+            query += " AND "
+        query += equip[i] + " != 1"
+    query += " limit " + str(limit) + ';'    
     return query
         
 
@@ -90,3 +111,12 @@ if __name__ == '__main__':
     app.run()
 
 
+
+
+
+#            if request.form['muscles'] == 'upper':
+#                exc = query_db('select workout_name from exercises where muscles=? or muscles=? or muscles=? limit(?)', upper + [num], one=False)
+#            elif request.form['muscles'] == 'lower':
+#                exc = query_db('select workout_name from exercises where muscles=? limit(?)', lower + [num], one=False)
+#            else:
+#                exc = query_db('select workout_name from exercises where muscles=? or muscles=? or muscles=? or muscles=? or muscles=? limit(?)', full + [num], one=False)
