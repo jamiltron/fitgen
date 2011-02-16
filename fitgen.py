@@ -84,6 +84,9 @@ def random_workout():
     return render_template('show_exercises.html', entries=entries)
     
 def build_query(muscles=[], types=[], equip=[], limit=1):
+    """takes a list of muscles, workout types, equipment to exclude
+    and the number of exercises to generate in a workout, returning the 
+    sql query neccessary to build a workout"""
     query = "SELECT workout_name FROM exercises WHERE ("
     
     for i in range(0, len(muscles)):       

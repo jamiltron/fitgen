@@ -7,7 +7,7 @@ create table users (
        user_role string not null,
        barbell integer,
        dumbell integer,
-       ketllebell integer,
+       kettlebell integer,
        bench integer,
        rack integer,
        pullup integer,
@@ -17,7 +17,10 @@ create table users (
        rower integer,
        elliptical integer,
        climber integer,
-       pool integer
+       pool integer,
+       exercise-ball integer,
+       medicine-ball integer,
+       leg-press integer
 );
 drop table if exists exercises;
 create table exercises (
@@ -28,7 +31,7 @@ create table exercises (
        force string not null,
        barbell integer,
        dumbell integer,
-       ketllebell integer,
+       kettlebell integer,
        bench integer,
        rack integer,
        pullup integer,
@@ -38,5 +41,8 @@ create table exercises (
        rower integer,
        elliptical integer,
        climber integer,
-       pool integer
+       pool integer,
+       exercise-ball integer,
+       medicine-ball integer,
+       leg-press integer
 );
