@@ -1,3 +1,6 @@
+02-15-2011
+    + Changed some database entries (added more equipment, fixed kettlebell)
+    + Started working on basic login features
 02-11-2011
     + Added CHANGES, TODO
     + Created query_builder in fitgen.py
