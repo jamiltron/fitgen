@@ -10,6 +10,7 @@ DEBUG = True
 SECRET_KEY = 'development key'
 USERNAME = 'admin'
 PASSWORD = 'password'
+SALT = "s3cret_s@lt"
 
 app = Flask(__name__)
 app.config.from_object(__name__)
@@ -43,6 +44,26 @@ def after_request(response):
 def index():
     return render_template('index.html')
 
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    error = None
+    if request.method == 'POST':
+        if request.form['username'] != app.config['USERNAME']:
+            error = 'Invalid username'
+        elif request.form['password'] != app.config['PASSWORD']:
+            error = 'Invalid password'
+        else:
+            session['logged_in'] = True
+            flash('You were logged in')
+            return redirect(url_for('show_entries'))
+    return render_template('login.html', error=error)
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    error = None
+    return render_template('register.html', error=error)
+    
+
 @app.route('/workout', methods=['POST'])
 def random_workout():    
     if request.method == 'POST':
@@ -71,10 +92,12 @@ def random_workout():
                     type_include.append(x)
             except:
                 pass        
+
+        # try to get the query and build the exercises
         try:
             limit = request.form['num_exercises']
             query = build_query(muscle_dict[request.form['muscles']],
-                        type_include, equip_exclude, limit)
+                        type_include, equip_exclude, request.form['force'], limit)
             exc = query_db(query, one=False)
             entries = []
             for x in exc:
@@ -83,7 +106,7 @@ def random_workout():
             entries=["error_raised"]
     return render_template('show_exercises.html', entries=entries)
     
-def build_query(muscles=[], types=[], equip=[], limit=1):
+def build_query(muscles=[], types=[], equip=[], force=None, limit=1):
     """takes a list of muscles, workout types, equipment to exclude
     and the number of exercises to generate in a workout, returning the 
     sql query neccessary to build a workout"""
@@ -101,6 +124,8 @@ def build_query(muscles=[], types=[], equip=[], limit=1):
                 query += " OR "
             query += "workout_type='" + types[i] + "'"
         query += ")"
+    if force != None:
+        query += " AND (force='" + force + "' OR force='other')"
     if len(equip) > 0:
         query += " AND ("
         for i in range(0, len(equip)):

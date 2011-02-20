@@ -5,12 +5,12 @@
   <form action="{{ url_for('login') }}" method=post>
     <dl>
       <dt>Username:
-      <dd><input type=text name=username>
+      <dd><input type=text name=username><br><br>
       <dt>Password:
-      <dd><input type=password name=password>
+      <dd><input type=password name=password><br><br>
       <dd><input type=submit value=Login>
     </dl>
   </form>
   <br>
-  <i>or</i> <a href="{{ url_for('register') }}">Register a new account</a>
+  <a href="{{ url_for('register') }}"><b>Register a new account</b></a>
 {% endblock %}

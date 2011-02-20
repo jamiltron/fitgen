@@ -2,21 +2,20 @@
 {% block body %}
   <h2>Register</h2>
   {% if error %}<p class=error><strong>Error:</strong> {{ error }}{% endif %}
-  <form action="{{ url_for('login') }}" method=post>
+  <form action="{{ url_for('register') }}" method=post>
     <dl>
       <dt>Username:
-      <dd><input type=text name=username>
+      <dd><input type=text name=username><br><br>
       <dt>Password:
       <dd><input type=password name=password1>
       <dt>Retype password:	
-      <dd><input type=password name=password2>
+      <dd><input type=password name=password2><br><br>
       <dt>Email address:
       <dd><input type=text name=email1>
       <dt>Retype email address:
-      <dd><input type=text name=email2>
+      <dd><input type=text name=email2><br><br>
+      <br>	
       <dd><input type=submit value=Register>
     </dl>
   </form>
-  <br>
-  <i>or</i> <a href="{{ url_for('register') }}">Register a new account</a>
 {% endblock %}
