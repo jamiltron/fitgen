@@ -13,7 +13,6 @@ from flask import Flask, request, session, g, redirect, url_for, \
 from contextlib import closing
 from random import randint
 
-
 # configuration
 # obviously, change most of these 
 DATABASE = './fitgen.db'
@@ -59,15 +58,28 @@ def index():
 def login():
     error = None
     if request.method == 'POST':
-        if request.form['username'] != app.config['USERNAME']:
-            error = 'Invalid username'
-        elif request.form['password'] != app.config['PASSWORD']:
-            error = 'Invalid password'
+        exc = query_db("SELECT id, password FROM users WHERE login_name='" + 
+                       request.form['username'] + "' LIMIT 1;")
+        comp_hash = hashlib.sha1()
+        comp_hash.update(str(exc[0]['id']) + request.form['password'] + SALT)
+        comp_pass = comp_hash.hexdigest()
+        if comp_pass != exc[0]['password']:
+            error = 'Invalid username or password'
+            del(comp_hash)
+            del(comp_pass)
         else:
             session['logged_in'] = True
             flash('You were logged in')
-            return redirect(url_for('show_entries'))
+            del(comp_hash)
+            del(comp_pass)
+            return redirect(url_for('index'))
     return render_template('login.html', error=error)
+
+@app.route('/logout')
+def logout():
+    session.pop('logged_in', None)
+    flash('You were logged out')
+    return redirect(url_for('index'))
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -91,20 +103,21 @@ def register():
         if error == None:
             exc = query_db("SELECT count(*) FROM users;")
             count = exc[0]['count(*)']
-            print count
             user_hash = hashlib.sha1()
             user_hash.update(str(count + 1) + request.form['password1'] + SALT)
             user_pass = user_hash.hexdigest()
             try:
-                g.db.execute('INSERT INTO users (login_name, email, password) values (?, ?, ?)',
-                             [request.form['username'], request.form['email1'], 
-                              user_pass])
+                g.db.execute('INSERT INTO users (login_name, email, password, user_role)' +
+                             ' values (?, ?, ?, ?)', [request.form['username'], 
+                                                     request.form['email1'], 
+                                                     user_pass, 'user'])
                 g.db.commit()
+                del(user_hash)
+                del(user_pass)
                 flash("New user " + request.form['username'] + " registered.")
             except:
                 error = "error inserting into database"
     return render_template('register.html', error=error)
-    
 
 @app.route('/workout', methods=['POST'])
 def random_workout():    
