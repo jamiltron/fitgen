@@ -1,16 +1,27 @@
+################################################################################
+# fitgen.py                                                                    #
+# by Justin Hamilton                                                           #
+#                                                                              #
+# This is super hacky. I am only able to work on this in my free time, so I am #
+# currently trying to get a working 'prototype' up before I refine the code    #
+# and make it more  presentable                                                #
+################################################################################
 import sqlite3
+import hashlib
 from flask import Flask, request, session, g, redirect, url_for, \
     abort, render_template, flash
 from contextlib import closing
 from random import randint
 
+
 # configuration
+# obviously, change most of these 
 DATABASE = './fitgen.db'
 DEBUG = True
 SECRET_KEY = 'development key'
 USERNAME = 'admin'
 PASSWORD = 'password'
-SALT = "s3cret_s@lt"
+SALT = "s3cret_s@lt" 
 
 app = Flask(__name__)
 app.config.from_object(__name__)
@@ -61,6 +72,37 @@ def login():
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     error = None
+    if request.method == 'POST':
+        if request.form['password1'] != request.form['password2']:
+            error = "Passwords do not match"
+        if request.form['email1'] != request.form['email2']:
+            error = "Email does not match"
+        
+        exc = query_db("SELECT login_name FROM users WHERE login_name='" + 
+                       request.form['username'] + "' LIMIT 1;")
+        if exc:
+            error = "Username already in use"
+
+        exc = query_db("SELECT email FROM users where email='" + request.form['email1'] + 
+                       "' LIMIT 1;")
+        if exc:
+            error = "User already registered with that email address"
+        
+        if error == None:
+            exc = query_db("SELECT count(*) FROM users;")
+            count = exc[0]['count(*)']
+            print count
+            user_hash = hashlib.sha1()
+            user_hash.update(str(count + 1) + request.form['password1'] + SALT)
+            user_pass = user_hash.hexdigest()
+            try:
+                g.db.execute('INSERT INTO users (login_name, email, password) values (?, ?, ?)',
+                             [request.form['username'], request.form['email1'], 
+                              user_pass])
+                g.db.commit()
+                flash("New user " + request.form['username'] + " registered.")
+            except:
+                error = "error inserting into database"
     return render_template('register.html', error=error)
     
 
