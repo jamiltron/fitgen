@@ -52,7 +52,17 @@ def after_request(response):
 
 @app.route('/cpanel', methods=['GET', 'POST'])
 def cpanel():
-    pass
+    equip_list = ['barbell', 'dumbell', 'kettlebell', 'bench',
+                  'rack', 'pullup', 'box', 'jumprope', 'bike',
+                  'rower', 'elliptical', 'climber', 'pool', 'exercise_ball', 
+                  'medicine_ball', 'leg_press', 'leg_extension']
+    owned_list = []
+    if session['logged_in']:
+        exc = query_db("SELECT barbell, dumbell, kettlebell, bench, rack " +
+                   "pullup, box, jumprope, bike, rower, elliptical, climber, pool " +
+                   "exercise_ball, medicine_ball, leg_press, leg_extension FROM users " +
+                   "WHERE login_name='" + str(session['username']) + "';")      
+    return render_template('cpanel.html')
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -62,7 +72,7 @@ def index():
 def login():
     error = None
     if request.method == 'POST':
-        exc = query_db("SELECT id, password, user_role FROM users WHERE login_name='" + 
+        exc = query_db("SELECT id, password, user_role, email FROM users WHERE login_name='" + 
                        request.form['username'] + "' LIMIT 1;")
         comp_hash = hashlib.sha1()
         comp_hash.update(str(exc[0]['id']) + request.form['password'] + SALT)
@@ -74,6 +84,7 @@ def login():
         else:
             session['logged_in'] = True
             session['username'] = request.form['username']
+            session['email'] = exc[0]['email']
             session['role'] = exc[0]['user_role']
             flash('You were logged in')
             del(comp_hash)

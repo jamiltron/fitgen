@@ -1,0 +1,18 @@
+{% extends "layout.html" %}
+{% block body %}
+  <h2>Control Panel</h2>
+  {% if error %}<p class=error><strong>Error:</strong> {{ error }} {% endif %}
+  {% if session.logged_in %}
+  <dl>
+    <dt><b>Username:</b> {{ session.username }}
+    <dt><b>Email:</b> {{ session.email }}
+    <br><br>
+    <dt><b>Saved workouts:</b> <i>not implemented yet</i>
+    <br>
+    <br>
+    <dt><b>Equipment:</b>
+  </dl>
+  {% else %}
+  <a href="{{ url_for('login') }}">Log in</a>
+  {% end for %}
+{% endblock %}

@@ -18,9 +18,10 @@ create table users (
        elliptical integer,
        climber integer,
        pool integer,
-       exercise-ball integer,
-       medicine-ball integer,
-       leg-press integer
+       exercise_ball integer,
+       medicine_ball integer,
+       leg_press integer,
+       leg_extension integer
 );
 drop table if exists exercises;
 create table exercises (
@@ -42,7 +43,8 @@ create table exercises (
        elliptical integer,
        climber integer,
        pool integer,
-       exercise-ball integer,
-       medicine-ball integer,
-       leg-press integer
+       exercise_ball integer,
+       medicine_ball integer,
+       leg_press integer,
+       leg_extension integer
 );
