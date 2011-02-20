@@ -1,21 +1,6 @@
 {% extends "layout.html" %}
 {% block body %}
-  <h2>Register</h2>
-  {% if error %}<p class=error><strong>Error:</strong> {{ error }}{% endif %}
-  <form action="{{ url_for('register') }}" method=post>
-    <dl>
-      <dt>Username:
-      <dd><input type=text name=username><br><br>
-      <dt>Password:
-      <dd><input type=password name=password1>
-      <dt>Retype password:	
-      <dd><input type=password name=password2><br><br>
-      <dt>Email address:
-      <dd><input type=text name=email1>
-      <dt>Retype email address:
-      <dd><input type=text name=email2><br><br>
-      <br>	
-      <div style="overflow:auto;height:100px;font:10px/12px Sans-Serif;">
+<br>
 	<b><u>Web Site Terms and Conditions of Use</u></b><br><br>
 <b>1. Terms</b><br><br>
 
@@ -52,9 +37,5 @@ Your privacy is very important to us. Accordingly, we have developed this Policy
     <li> We will protect personal information by reasonable security safeguards against loss or theft, as well as unauthorized access, disclosure, copying, use or modification.
     <li> We will make readily available to customers information about our policies and practices relating to the management of personal information.</ul><br>
 
-We are committed to conducting our business in accordance with these principles in order to ensure that the confidentiality of personal information is protected and maintained.</div><br>
-     <dd><input type=submit value=Register><br><br>
-      By registering you agree to accept the Terms of Service as stated above.<br>
-    </dl>
-  </form>
+We are committed to conducting our business in accordance with these principles in order to ensure that the confidentiality of personal information is protected and maintained.<br>
 {% endblock %}

@@ -5,8 +5,11 @@
   <h1><a href="{{ url_for('index') }}">Fitgen</a></h1>
   <div class=metanav>
   {% if not session.logged_in %}
-    <a href="{{ url_for('login') }}">log in</a>
+    <a href="{{ url_for('login') }}">log in</a> or 
+    <a href="{{ url_for('register')}}"> register</a>
   {% else %}
+    Welcome, {{session.username}}! <br>
+    <a href="{{ url_for('cpanel') }}">control panel</a> 
     <a href="{{ url_for('logout') }}">log out</a>
   {% endif %}
   </div>
@@ -14,4 +17,4 @@
     <div class=flash>{{message}}</div>
   {% endfor %}
   {% block body %}{% endblock %}
-</div>
+    <br><div class=tos><center><a href="{{ url_for('termsofservice') }}">Terms of Service</a></center>Copyright 2011 Justin Hamilton</div>

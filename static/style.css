@@ -3,6 +3,7 @@ a, h1, h2       { color: #66CC33; }
 h1, h2          { font-family: 'Georgia', serif; margin: 0; }
 h1              { border-bottom: 2px solid #eee; }
 h2              { font-size: 1.2em; }
+hr              { color: "#009933"; background-color: "#009933"; width: 80%;}
 
 .page           { margin: 2em auto; width: 35em; border: 5px solid #009933;
                   padding: 0.8em; background: #FEFEF2; }
@@ -14,3 +15,4 @@ h2              { font-size: 1.2em; }
 .flash          { background: #CEE5F5; padding: 0.5em;
                   border: 1px solid #AACBE2; }
 .error          { background: #F0D6D6; padding: 0.5em; }
+.tos            { font-size: 10px;}

@@ -50,6 +50,10 @@ def after_request(response):
     g.db.close()
     return response
 
+@app.route('/cpanel', methods=['GET', 'POST'])
+def cpanel():
+    pass
+
 @app.route('/', methods=['GET', 'POST'])
 def index():
     return render_template('index.html')
@@ -58,7 +62,7 @@ def index():
 def login():
     error = None
     if request.method == 'POST':
-        exc = query_db("SELECT id, password FROM users WHERE login_name='" + 
+        exc = query_db("SELECT id, password, user_role FROM users WHERE login_name='" + 
                        request.form['username'] + "' LIMIT 1;")
         comp_hash = hashlib.sha1()
         comp_hash.update(str(exc[0]['id']) + request.form['password'] + SALT)
@@ -69,15 +73,23 @@ def login():
             del(comp_pass)
         else:
             session['logged_in'] = True
+            session['username'] = request.form['username']
+            session['role'] = exc[0]['user_role']
             flash('You were logged in')
             del(comp_hash)
             del(comp_pass)
             return redirect(url_for('index'))
     return render_template('login.html', error=error)
 
+@app.route('/termsofservice')
+def termsofservice():
+    return render_template('termsofservice.html')
+
 @app.route('/logout')
 def logout():
     session.pop('logged_in', None)
+    session.pop('username', None)
+    session.pop('role', None)
     flash('You were logged out')
     return redirect(url_for('index'))
 
