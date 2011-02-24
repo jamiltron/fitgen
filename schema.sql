@@ -21,15 +21,19 @@ create table users (
        exercise_ball integer,
        medicine_ball integer,
        leg_press integer,
-       leg_extension integer
+       leg_extension integer,
+       glute_ham_chair integer,
+       smith_machine integer
 );
+
 drop table if exists exercises;
 create table exercises (
        id integer primary key autoincrement,
        workout_name string not null,
        muscles string not null,
        workout_type string not null,
-       force string not null,
+       force string,
+       workout_like string,
        barbell integer,
        dumbell integer,
        kettlebell integer,
@@ -46,5 +50,7 @@ create table exercises (
        exercise_ball integer,
        medicine_ball integer,
        leg_press integer,
-       leg_extension integer
+       leg_extension integer,
+       glute_ham_chair integer,
+       smith_machine integer       
 );
