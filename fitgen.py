@@ -21,6 +21,16 @@ SECRET_KEY = 'development key'
 USERNAME = 'admin'
 PASSWORD = 'password'
 SALT = "s3cret_s@lt" 
+equip_list = ['barbell', 'dumbell', 'kettlebell', 'bench',
+              'rack', 'pullup', 'box', 'jumprope', 'bike',
+              'rower', 'elliptical', 'climber', 'pool', 'exercise_ball', 
+              'medicine_ball', 'leg_press', 'leg_extension', 'glute_ham_chair', 
+              'smith_machine']
+muscle_dict = {"upper": ['back', 'arms', 'chest'],
+               "lower": ['legs'],
+               "full": ['back', 'arms', 'chest', 'legs', 'core']}
+type_list = ['weights', 'bodyweight', 'cardio']
+
 
 app = Flask(__name__)
 app.config.from_object(__name__)
@@ -52,15 +62,14 @@ def after_request(response):
 
 @app.route('/cpanel', methods=['GET', 'POST'])
 def cpanel():
-    equip_list = ['barbell', 'dumbell', 'kettlebell', 'bench',
-                  'rack', 'pullup', 'box', 'jumprope', 'bike',
-                  'rower', 'elliptical', 'climber', 'pool', 'exercise_ball', 
-                  'medicine_ball', 'leg_press', 'leg_extension']
+    global equip_list
     owned_list = []
+
     if session['logged_in']:
         exc = query_db("SELECT barbell, dumbell, kettlebell, bench, rack " +
                    "pullup, box, jumprope, bike, rower, elliptical, climber, pool " +
-                   "exercise_ball, medicine_ball, leg_press, leg_extension FROM users " +
+                   "exercise_ball, medicine_ball, leg_press, leg_extension, " +
+                   "glute_ham_chair, smith_machine FROM users " +
                    "WHERE login_name='" + str(session['username']) + "';")      
     return render_template('cpanel.html')
 
@@ -72,8 +81,9 @@ def index():
 def login():
     error = None
     if request.method == 'POST':
-        exc = query_db("SELECT id, password, user_role, email FROM users WHERE login_name='" + 
-                       request.form['username'] + "' LIMIT 1;")
+        exc = query_db("SELECT id, password, user_role, email FROM users " +
+                       " WHERE login_name='" + request.form['username'] + 
+                       "' LIMIT 1;")
         comp_hash = hashlib.sha1()
         comp_hash.update(str(exc[0]['id']) + request.form['password'] + SALT)
         comp_pass = comp_hash.hexdigest()
@@ -118,8 +128,8 @@ def register():
         if exc:
             error = "Username already in use"
 
-        exc = query_db("SELECT email FROM users where email='" + request.form['email1'] + 
-                       "' LIMIT 1;")
+        exc = query_db("SELECT email FROM users where email='" + 
+                       request.form['email1'] +  "' LIMIT 1;")
         if exc:
             error = "User already registered with that email address"
         
@@ -145,14 +155,8 @@ def register():
 @app.route('/workout', methods=['POST'])
 def random_workout():    
     if request.method == 'POST':
-        equip_list = ['barbell', 'dumbell', 'ketllebell', 'bench',
-                      'rack', 'pullup', 'box', 'jumprope', 'bike',
-                      'rower', 'elliptical', 'climber', 'pool']
+        global equip_list, muscle_dict, type_list
         equip_exclude = []
-        muscle_dict = {"upper": ['back', 'arms', 'chest'],
-                       "lower": ['legs'],
-                       "full": ['back', 'arms', 'chest', 'legs', 'core']}
-        type_list = ['weights', 'bodyweight', 'cardio']
         type_include = []
         
         # build the list of equipment to exclude
@@ -173,9 +177,13 @@ def random_workout():
 
         # try to get the query and build the exercises
         try:
+            if request.form['force'] == 'both':
+                force_str = None
+            else:
+                force_str = [request.form['force']]
             limit = request.form['num_exercises']
             query = build_query(muscle_dict[request.form['muscles']],
-                        type_include, equip_exclude, request.form['force'], limit)
+                        type_include, equip_exclude, force_str, limit)
             exc = query_db(query, one=False)
             entries = []
             for x in exc:
@@ -188,13 +196,17 @@ def build_query(muscles=[], types=[], equip=[], force=None, limit=1):
     """takes a list of muscles, workout types, equipment to exclude
     and the number of exercises to generate in a workout, returning the 
     sql query neccessary to build a workout"""
-    query = "SELECT workout_name FROM exercises WHERE ("
-    
+
+    query = "SELECT workout_name FROM exercises WHERE ("    
+
+    # add the muscle selection(s) to the query
     for i in range(0, len(muscles)):       
         if i != 0:
             query += " OR "
         query += "muscles='" + muscles[i] + "'"
     query += " OR muscles='other')"
+
+    # add the workout type to the query
     if len(types) > 0:
         query += " AND ("
         for i in range(0, len(types)):           
@@ -202,8 +214,12 @@ def build_query(muscles=[], types=[], equip=[], force=None, limit=1):
                 query += " OR "
             query += "workout_type='" + types[i] + "'"
         query += ")"
+
+    # add the force, if any, to the query
     if force != None:
         query += " AND (force='" + force + "' OR force='other')"
+
+    # add the equipment filter
     if len(equip) > 0:
         query += " AND ("
         for i in range(0, len(equip)):
@@ -211,6 +227,8 @@ def build_query(muscles=[], types=[], equip=[], force=None, limit=1):
                 query += " AND "
             query += equip[i] + " != 1" 
         query += ') ORDER BY RANDOM() LIMIT ' + str(limit) + ";"
+    
+    # print the query for shoddy debugging purposes and then
     print query
     return query      
 

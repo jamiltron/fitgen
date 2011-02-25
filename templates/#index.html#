@@ -54,7 +54,7 @@
 	<dd><input type=checkbox name="medicine_ball"/>Medicine Ball<br>
 	<dd><input type=checkbox name="leg_press"/>Leg Press/Hip Slide<br>
 	<dd><input type=checkbox name="leg_extension"/>Leg Extension Machine<br>
-        <dd><input type=checkbox name="glute_hame_chair"/>Glute & Ham Chair<br>
+        <dd><input type=checkbox name="glute_ham_chair"/>Glute & Ham Chair<br>
 	<dd><input type=checkbox name="smith_machine"/>Smith Machine<br>
         <br>	
         <dd><input type=submit value="Generate">
