@@ -26,12 +26,13 @@ equip_list = ['barbell', 'dumbell', 'kettlebell', 'bench',
               'rower', 'elliptical', 'climber', 'pool', 'exercise_ball', 
               'medicine_ball', 'leg_press', 'leg_extension', 'glute_ham_chair', 
               'smith_machine']
+type_list = ['weights', 'bodyweight', 'cardio']
 muscle_dict = {"upper": ['back', 'arms', 'chest'],
                "lower": ['legs'],
                "full": ['back', 'arms', 'chest', 'legs', 'core']}
-type_list = ['weights', 'bodyweight', 'cardio']
 
 
+# build our application
 app = Flask(__name__)
 app.config.from_object(__name__)
 app.config.from_envvar('FITGEN_SETTINGS', silent=True)
@@ -62,16 +63,22 @@ def after_request(response):
 
 @app.route('/cpanel', methods=['GET', 'POST'])
 def cpanel():
+    """registered user's control panel"""
     global equip_list
+    query = ""
     owned_list = []
+    return render_template('cpanel.html', error=None)
 
-    if session['logged_in']:
-        exc = query_db("SELECT barbell, dumbell, kettlebell, bench, rack " +
-                   "pullup, box, jumprope, bike, rower, elliptical, climber, pool " +
-                   "exercise_ball, medicine_ball, leg_press, leg_extension, " +
-                   "glute_ham_chair, smith_machine FROM users " +
-                   "WHERE login_name='" + str(session['username']) + "';")      
-    return render_template('cpanel.html')
+    try:
+        if session['logged_in']:
+            for x in equip_list:
+                query += x + ','
+            query = "SELECT " + query[:len(query) - 1] + " FROM users WHERE login_name='" + \
+            str(session['username']) + "';"            
+            exc = query_db(query)
+            return render_template('cpanel.html')
+    except:
+        return redirect(url_for('login'))
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -79,26 +86,40 @@ def index():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    try:
+        if session['logged_in']:
+            return redirect(url_for('cpanel'))
+    except:
+        pass
     error = None
     if request.method == 'POST':
         exc = query_db("SELECT id, password, user_role, email FROM users " +
                        " WHERE login_name='" + request.form['username'] + 
                        "' LIMIT 1;")
+
+        # generate a sha1 hash for password verification, and then add the 
+        # user id plus our salt to the password, you may want to use similar
+        # but different methods if you go this route for verification
         comp_hash = hashlib.sha1()
         comp_hash.update(str(exc[0]['id']) + request.form['password'] + SALT)
         comp_pass = comp_hash.hexdigest()
         if comp_pass != exc[0]['password']:
             error = 'Invalid username or password'
+            # throw away the password information asap, just in case
             del(comp_hash)
             del(comp_pass)
+            del(exc[0]['password'])
         else:
+            # I should probably integrate the session stack with a user object
             session['logged_in'] = True
             session['username'] = request.form['username']
             session['email'] = exc[0]['email']
             session['role'] = exc[0]['user_role']
             flash('You were logged in')
+            # throw away the password info just in case
             del(comp_hash)
             del(comp_pass)
+            del(exc[0]['password'])
             return redirect(url_for('index'))
     return render_template('login.html', error=error)
 
@@ -108,31 +129,39 @@ def termsofservice():
 
 @app.route('/logout')
 def logout():
+    """pops the user's information off of the session stack and returns
+    a flash message stating this has been done"""
     session.pop('logged_in', None)
     session.pop('username', None)
+    session.pop('email', None)
     session.pop('role', None)
     flash('You were logged out')
     return redirect(url_for('index'))
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
+    """enters user information into the database"""
     error = None
     if request.method == 'POST':
+        # verify passwords
         if request.form['password1'] != request.form['password2']:
             error = "Passwords do not match"
+        # verify email
         if request.form['email1'] != request.form['email2']:
             error = "Email does not match"
         
+        # if the previous validations pass, check if the username is used
         exc = query_db("SELECT login_name FROM users WHERE login_name='" + 
                        request.form['username'] + "' LIMIT 1;")
         if exc:
             error = "Username already in use"
-
+        
+        # see if the email is already registered
         exc = query_db("SELECT email FROM users where email='" + 
                        request.form['email1'] +  "' LIMIT 1;")
         if exc:
             error = "User already registered with that email address"
-        
+        # if all succeeds so far, enter the user db
         if error == None:
             exc = query_db("SELECT count(*) FROM users;")
             count = exc[0]['count(*)']
@@ -140,11 +169,12 @@ def register():
             user_hash.update(str(count + 1) + request.form['password1'] + SALT)
             user_pass = user_hash.hexdigest()
             try:
-                g.db.execute('INSERT INTO users (login_name, email, password, user_role)' +
-                             ' values (?, ?, ?, ?)', [request.form['username'], 
-                                                     request.form['email1'], 
-                                                     user_pass, 'user'])
+                g.db.execute("INSERT INTO users (login_name, email, password, " + 
+                             "user_role) values (?, ?, ?, ?)", 
+                             [request.form['username'], request.form['email1'], 
+                             user_pass, 'user'])
                 g.db.commit()
+                # delete the password asap
                 del(user_hash)
                 del(user_pass)
                 flash("New user " + request.form['username'] + " registered.")
@@ -154,6 +184,7 @@ def register():
 
 @app.route('/workout', methods=['POST'])
 def random_workout():    
+    """the logic behind the random workout"""
     if request.method == 'POST':
         global equip_list, muscle_dict, type_list
         equip_exclude = []

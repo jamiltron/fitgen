@@ -2,6 +2,7 @@
 {% block body %}
   <br>
   <h2>Welcome to Fitgen!</h2>
+  {% if error %}<p class=error><strong>Error:</strong> {{ error }}{% endif %}
   <p>Hello and welcome to Fitgen! Fitgen is a workout randomizer. Although Fitgen's primary
     purpose is being served, many features are still incomplete. Check back often!</p>
   <form action="{{ url_for('random_workout') }}" method=post class=add-entry>
@@ -54,7 +55,7 @@
 	<dd><input type=checkbox name="medicine_ball"/>Medicine Ball<br>
 	<dd><input type=checkbox name="leg_press"/>Leg Press/Hip Slide<br>
 	<dd><input type=checkbox name="leg_extension"/>Leg Extension Machine<br>
-        <dd><input type=checkbox name="glute_hame_chair"/>Glute & Ham Chair<br>
+        <dd><input type=checkbox name="glute_ham_chair"/>Glute & Ham Chair<br>
 	<dd><input type=checkbox name="smith_machine"/>Smith Machine<br>
         <br>	
         <dd><input type=submit value="Generate">
