@@ -20,17 +20,25 @@ DEBUG = True
 SECRET_KEY = 'development key'
 USERNAME = 'admin'
 PASSWORD = 'password'
-SALT = "s3cret_s@lt" 
+SALT = 's3cret_s@lt' 
 equip_list = ['barbell', 'dumbell', 'kettlebell', 'bench',
               'rack', 'pullup', 'box', 'jumprope', 'bike',
               'rower', 'elliptical', 'climber', 'pool', 'exercise_ball', 
               'medicine_ball', 'leg_press', 'leg_extension', 'glute_ham_chair', 
               'smith_machine']
 type_list = ['weights', 'bodyweight', 'cardio']
-muscle_dict = {"upper": ['back', 'arms', 'chest'],
-               "lower": ['legs'],
-               "full": ['back', 'arms', 'chest', 'legs', 'core']}
-
+muscle_dict = {'upper': ['back', 'arms', 'chest'],
+               'lower': ['legs'],
+               'full': ['back', 'arms', 'chest', 'legs', 'core']}
+equip_dict = {'barbell': 'Barbell + Weights', 'bench': 'Bench', 'bike': 'Bike',
+              'box': 'Box', 'dumbell': 'Dumbells', 'elliptical': 'Elliptical Machine',
+              'exercise_ball': 'Exercise Ball', 'glute_ham_chair': 'Glute Ham Chair',
+              'jumprope': 'Jumprope', 'kettlebell': 'Kettlebell',
+              'leg_extension': 'Leg Extension Machine', 'medicine_ball': 'Medicine Ball',
+              'leg_press': 'Leg Press/Hip Slide', 'rack': 'Power Rack', 
+              'pullup': 'Pullup Bar', 'rower': 'Rowing Machine',
+              'smith_machine': 'Smith Machine', 'climber': 'Stairs/Stair Machine',
+              'pool': 'Swimming Pool'}
 
 # build our application
 app = Flask(__name__)
@@ -52,6 +60,45 @@ def query_db(query, args=(), one=False):
                for idx, value in enumerate(row)) for row in cur.fetchall()]
     return (rv[0] if rv else None) if one else rv
 
+def build_query(muscles=[], types=[], equip=[], force=None, limit=1):
+    """takes a list of muscles, workout types, equipment to exclude
+    and the number of exercises to generate in a workout, returning the 
+    sql query neccessary to build a workout"""
+
+    query = "SELECT workout_name FROM exercises WHERE ("    
+
+    # add the muscle selection(s) to the query
+    for i in range(0, len(muscles)):       
+        if i != 0:
+            query += " OR "
+        query += "muscles='" + muscles[i] + "'"
+    query += " OR muscles='other')"
+
+    # add the workout type to the query
+    if len(types) > 0:
+        query += " AND ("
+        for i in range(0, len(types)):           
+            if i != 0:
+                query += " OR "
+            query += "workout_type='" + types[i] + "'"
+        query += ")"
+
+    # add the force, if any, to the query
+    if force:
+        query += " AND (force='" + force + "' OR force='other')"
+    # add the equipment filter
+    if len(equip) > 0:
+        query += " AND ("
+        for i in range(0, len(equip)):
+            if i != 0:
+                query += " AND "
+            query += equip[i] + " != 1" 
+        query += ') ORDER BY RANDOM() LIMIT ' + str(limit) + ";"
+    
+    # print the query for shoddy debugging purposes and then
+    print query
+    return query      
+
 @app.before_request
 def before_request():
     g.db = connect_db()
@@ -67,7 +114,32 @@ def cpanel():
     global equip_list
     query = ""
     owned_list = []
-    return render_template('cpanel.html', error=None)
+    error = None
+
+    if request.method == 'POST':
+        insert_query = ""
+        changed = False
+        for x in equip_list:
+            print "trying: " + x
+            try:
+                print request.form[x]
+                if request.form[x]:
+                    insert_query += x + "=1,"
+                    changed = True
+            except:
+                insert_query += x + "=0,"
+                changed = True
+        if changed:
+            insert_query = "UPDATE USERS set " + insert_query[:len(insert_query)-1]
+            insert_query += " WHERE login_name='"
+            insert_query += str(session['username']) + "';"
+            print "INSERT QUERY: " + insert_query
+            try:
+                g.db.execute(insert_query)
+                g.db.commit()
+                flash("Equipment updated")
+            except:
+                error = "error inserting into database"
 
     try:
         if session['logged_in']:
@@ -76,7 +148,9 @@ def cpanel():
             query = "SELECT " + query[:len(query) - 1] + " FROM users WHERE login_name='" + \
             str(session['username']) + "';"            
             exc = query_db(query)
-            return render_template('cpanel.html')
+            for x in exc:
+                owned = x
+            return render_template('cpanel.html', owned=owned, equip_names=equip_dict, error = error)
     except:
         return redirect(url_for('login'))
 
@@ -144,8 +218,12 @@ def register():
     error = None
     if request.method == 'POST':
         # verify passwords
-        if request.form['password1'] != request.form['password2']:
-            error = "Passwords do not match"
+        if len(request.form['password1']) < 8:
+            error = "Passwords must be at least 8 characters"
+        elif request.form['password1'].isalpha() or request.form['password1'].isnumeric():
+            error = "Passwords must have a mix of alpha and numeric characters"
+        elif request.form['password1'] != request.form['password2']:
+            error = "Passwords do not match"        
         # verify email
         if request.form['email1'] != request.form['email2']:
             error = "Email does not match"
@@ -163,8 +241,10 @@ def register():
             error = "User already registered with that email address"
         # if all succeeds so far, enter the user db
         if error == None:
+            # get the current max user id number
             exc = query_db("SELECT count(*) FROM users;")
             count = exc[0]['count(*)']
+            # generate their hash password using their password, salt, and id
             user_hash = hashlib.sha1()
             user_hash.update(str(count + 1) + request.form['password1'] + SALT)
             user_pass = user_hash.hexdigest()
@@ -191,12 +271,29 @@ def random_workout():
         type_include = []
         
         # build the list of equipment to exclude
-        for x in equip_list:
-            try:
-                if request.form[x]:
-                    pass
-            except:
-                equip_exclude.append(x)
+        try:
+            # if the user is logged in, get their saved equipment list
+            if session['logged_in']:
+                query = "SELECT "
+                for x in equip_list:
+                    query += x + ","
+                query = query[:len(query)-1] + " FROM users WHERE login_name='"
+                query += str(session['username']) + "';"
+                exc = query_db(query)
+                print exc
+                for x in exc:
+                    for key in x:
+                        if x[key] != 1:
+                            equip_exclude.append(key)
+
+        except:
+            # if the user is not logged in, base it on checkboxes in index.html
+            for x in equip_list:
+                try:
+                    if request.form[x]:
+                        pass
+                except:
+                    equip_exclude.append(x)
 
         # build list of types to include
         for x in type_list:
@@ -211,7 +308,7 @@ def random_workout():
             if request.form['force'] == 'both':
                 force_str = None
             else:
-                force_str = [request.form['force']]
+                force_str = request.form['force']
             limit = request.form['num_exercises']
             query = build_query(muscle_dict[request.form['muscles']],
                         type_include, equip_exclude, force_str, limit)
@@ -223,45 +320,5 @@ def random_workout():
             entries=["error_raised"]
     return render_template('show_exercises.html', entries=entries)
     
-def build_query(muscles=[], types=[], equip=[], force=None, limit=1):
-    """takes a list of muscles, workout types, equipment to exclude
-    and the number of exercises to generate in a workout, returning the 
-    sql query neccessary to build a workout"""
-
-    query = "SELECT workout_name FROM exercises WHERE ("    
-
-    # add the muscle selection(s) to the query
-    for i in range(0, len(muscles)):       
-        if i != 0:
-            query += " OR "
-        query += "muscles='" + muscles[i] + "'"
-    query += " OR muscles='other')"
-
-    # add the workout type to the query
-    if len(types) > 0:
-        query += " AND ("
-        for i in range(0, len(types)):           
-            if i != 0:
-                query += " OR "
-            query += "workout_type='" + types[i] + "'"
-        query += ")"
-
-    # add the force, if any, to the query
-    if force != None:
-        query += " AND (force='" + force + "' OR force='other')"
-
-    # add the equipment filter
-    if len(equip) > 0:
-        query += " AND ("
-        for i in range(0, len(equip)):
-            if i != 0:
-                query += " AND "
-            query += equip[i] + " != 1" 
-        query += ') ORDER BY RANDOM() LIMIT ' + str(limit) + ";"
-    
-    # print the query for shoddy debugging purposes and then
-    print query
-    return query      
-
 if __name__ == '__main__':
     app.run()

@@ -37,28 +37,32 @@
 	</select>
 	<br>
 	<br>
+	{% if session.logged_in %}
+	<dd><input type=submit value="Generate using Equip Owned">
+	{% else %}
 	<dt>Uncheck boxes to exclude exercises that require equipment:
 	<dd><input type=checkbox name="barbell" checked/>Barbell + Weights<br>
-	<dd><input type=checkbox name="dumbell" checked/>Dumbells<br>
-	<dd><input type=checkbox name="kettlebell" />Kettlebells<br>
 	<dd><input type=checkbox name="bench"checked/>Bench<br>
-	<dd><input type=checkbox name="rack" checked/>Power Rack<br>
-	<dd><input type=checkbox name="pullup" checked/>Pullup Bar<br>
-	<dd><input type=checkbox name="box" checked/>Box<br>
-	<dd><input type=checkbox name="jumprope" checked/>Jump-rope<br>
 	<dd><input type=checkbox name="bike" checked/>Bike<br>
-	<dd><input type=checkbox name="rower"checked/>Rowing Machine<br>
+	<dd><input type=checkbox name="box" checked/>Box<br>
+	<dd><input type=checkbox name="dumbell" checked/>Dumbells<br>
 	<dd><input type=checkbox name="elliptical" checked/>Elliptical Machine<br>
+	<dd><input type=checkbox name="exercise_ball"/>Exercise Ball<br>
+        <dd><input type=checkbox name="glute_ham_chair"/>Glute & Ham Chair<br>
+	<dd><input type=checkbox name="jumprope" checked/>Jump-rope<br>
+	<dd><input type=checkbox name="kettlebell" />Kettlebells<br>
+	<dd><input type=checkbox name="leg_extension"/>Leg Extension Machine<br>	
+	<dd><input type=checkbox name="leg_press"/>Leg Press/Hip Slide<br>
+	<dd><input type=checkbox name="medicine_ball"/>Medicine Ball<br>
+	<dd><input type=checkbox name="rack" checked/>Power Rack<br>	
+	<dd><input type=checkbox name="pullup" checked/>Pullup Bar<br>	
+	<dd><input type=checkbox name="rower"checked/>Rowing Machine<br>
+	<dd><input type=checkbox name="smith_machine"/>Smith Machine<br>
 	<dd><input type=checkbox name="climber" checked/>Stairs/Stair Machine<br>
 	<dd><input type=checkbox name="pool"/>Swimming Pool<br>
-	<dd><input type=checkbox name="exercise_ball"/>Exercise Ball<br>
-	<dd><input type=checkbox name="medicine_ball"/>Medicine Ball<br>
-	<dd><input type=checkbox name="leg_press"/>Leg Press/Hip Slide<br>
-	<dd><input type=checkbox name="leg_extension"/>Leg Extension Machine<br>
-        <dd><input type=checkbox name="glute_ham_chair"/>Glute & Ham Chair<br>
-	<dd><input type=checkbox name="smith_machine"/>Smith Machine<br>
         <br>	
         <dd><input type=submit value="Generate">
+	{% endif %}
       </dl>
     </form>
 {% endblock %}

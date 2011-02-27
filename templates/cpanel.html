@@ -3,14 +3,20 @@
   <h2>Control Panel</h2>
   {% if error %}<p class=error><strong>Error:</strong> {{ error }} {% endif %}
   {% if session.logged_in %}
+  <form action="{{ url_for('cpanel')}}" method=post>
   <dl>
     <dt><b>Username:</b> {{ session.username }}
-    <dt><b>Email:</b> {{ session.email }}
+    <dt><b>Email:</b>  {{ session.email }}
     <br><br>
     <dt><b>Saved workouts:</b> <i>not implemented yet</i>
     <br>
     <br>
     <dt><b>Equipment:</b>
+    {% for key in owned %}
+    <dd><input type=checkbox name="{{ key }}" {% if owned[key] %} checked {% endif %}/>
+{{ equip_names[key] }}<br>
+    {% endfor %}
+    <dd><input type=submit value=Update>
   </dl>
   {% else %}
   <a href="{{ url_for('login') }}">Log in</a>
