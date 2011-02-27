@@ -6,7 +6,7 @@ may be a great deal of functionaility missing. When the site is presentable I
 will issue "release" numbers.
 
 This is mostly to help me learn the Flask web framework and SQLite3. I am
-hoping to also add SQAlchemy to that list. See docs/flask/LICENSE for more
+hoping to also add SQLAlchemy to that list. See docs/flask/LICENSE for more
 information regarding Flask's licensing. SQLite is Public Domain. Although
 Fitgen is mostly for educational purposes and fun, I am licensing it under the
 BSD license, more information regarding that in docs/LICENSE.
