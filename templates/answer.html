@@ -1,0 +1,11 @@
+{% extends "layout.html" %}
+{% block body %}
+  <h2>Forgot Password</h2>
+  {% if error %}<p class=error><strong>Error:</strong> {{ error }}{% endif %}
+  <form action="{{ url_for('forgot') }}" method=post>
+    <dl>
+    <dt>{{ question }}:
+    <dd><input type=text name=answer><br><br>
+    <dd><input type=submit value="Answer">
+    </dl>
+{% endblock %}

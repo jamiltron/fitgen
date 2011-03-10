@@ -18,27 +18,29 @@ from random import randint
 DATABASE = './fitgen.db'
 DEBUG = True
 SECRET_KEY = 'development key'
-USERNAME = 'admin'
-PASSWORD = 'password'
 SALT = 's3cret_s@lt' 
+SALT2 = 'm0_sec23T'
 equip_list = ['barbell', 'dumbell', 'kettlebell', 'bench',
               'rack', 'pullup', 'box', 'jumprope', 'bike',
               'rower', 'elliptical', 'climber', 'pool', 'exercise_ball', 
-              'medicine_ball', 'leg_press', 'leg_extension', 'glute_ham_chair', 
+              'medicine_ball', 'leg_press', 'leg_extension', 'glute_ham_chair',
               'smith_machine']
 type_list = ['weights', 'bodyweight', 'cardio']
 muscle_dict = {'upper': ['back', 'arms', 'chest'],
                'lower': ['legs'],
                'full': ['back', 'arms', 'chest', 'legs', 'core']}
 equip_dict = {'barbell': 'Barbell + Weights', 'bench': 'Bench', 'bike': 'Bike',
-              'box': 'Box', 'dumbell': 'Dumbells', 'elliptical': 'Elliptical Machine',
-              'exercise_ball': 'Exercise Ball', 'glute_ham_chair': 'Glute Ham Chair',
+              'box': 'Box', 'dumbell': 'Dumbells', 
+              'elliptical': 'Elliptical Machine', 
+              'exercise_ball': 'Exercise Ball', 
+              'glute_ham_chair': 'Glute Ham Chair',
               'jumprope': 'Jumprope', 'kettlebell': 'Kettlebell',
-              'leg_extension': 'Leg Extension Machine', 'medicine_ball': 'Medicine Ball',
+              'leg_extension': 'Leg Extension Machine', 
+              'medicine_ball': 'Medicine Ball', 
               'leg_press': 'Leg Press/Hip Slide', 'rack': 'Power Rack', 
               'pullup': 'Pullup Bar', 'rower': 'Rowing Machine',
-              'smith_machine': 'Smith Machine', 'climber': 'Stairs/Stair Machine',
-              'pool': 'Swimming Pool'}
+              'smith_machine': 'Smith Machine', 
+              'climber': 'Stairs/Stair Machine', 'pool': 'Swimming Pool'}
 
 # build our application
 app = Flask(__name__)
@@ -248,19 +250,54 @@ def register():
             user_hash = hashlib.sha1()
             user_hash.update(str(count + 1) + request.form['password1'] + SALT)
             user_pass = user_hash.hexdigest()
+            secret_hash = hashlib.sha1()
+            secret_hash.update(str(count+1) + request.form['secret_answer'] + \
+                                   SALT2)
+            secret_pass = secret_hash.hexdigest()
             try:
-                g.db.execute("INSERT INTO users (login_name, email, password, " + 
-                             "user_role) values (?, ?, ?, ?)", 
+                g.db.execute("INSERT INTO users (login_name,email,password, " + 
+                             "user_role, secret_question, secret_answer) " + 
+                             "values (?, ?, ?, ?, ?, ?)", 
                              [request.form['username'], request.form['email1'], 
-                             user_pass, 'user'])
+                             user_pass, 'user', request.form['secret_question'], 
+                              secret_pass])
                 g.db.commit()
                 # delete the password asap
                 del(user_hash)
                 del(user_pass)
+                del(secret_hash)
+                del(secret_pass)
                 flash("New user " + request.form['username'] + " registered.")
             except:
                 error = "error inserting into database"
     return render_template('register.html', error=error)
+
+@app.route('/forgot', methods=['GET', 'POST'])
+def forgot():
+###NOT DONE###
+    """asks the user for their username, passes the secret question"""
+    if request.method == 'POST':
+        query = "SELECT id, secret_question, secret_answer from users "
+        query += "WHERE login_name='" + request.form['username'] + "';"
+        exc = query_db(query)
+        try:
+           temp_hash = hashlib.sha1()
+           temp_hash.update(str(exc[0]['id']) + request.form['answer'] + SALT2)
+           temp_pass = temp_hash.hexdigest()
+           if temp_pass == exc[0]['secret_answer']:
+               answer = True
+           else:
+               answer = False
+           del(temp_hash)
+           del(temp_pass)
+           del(exc)
+           return render_template('forgot.html', username=request.form['username'], \
+                                      answered=answer)
+        except:
+            return render_template('forgot.html', username=request.form['username'], \
+                                       question=exc[0]['secret_question'], answered=False)
+    else:
+        return render_template('forgot.html')
 
 @app.route('/workout', methods=['POST'])
 def random_workout():    
@@ -280,7 +317,6 @@ def random_workout():
                 query = query[:len(query)-1] + " FROM users WHERE login_name='"
                 query += str(session['username']) + "';"
                 exc = query_db(query)
-                print exc
                 for x in exc:
                     for key in x:
                         if x[key] != 1:

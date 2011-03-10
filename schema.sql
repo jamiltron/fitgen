@@ -23,7 +23,9 @@ create table users (
        leg_press integer,
        leg_extension integer,
        glute_ham_chair integer,
-       smith_machine integer
+       smith_machine integer,
+       secret_question string not null,
+       secret_answer string not null
 );
 
 drop table if exists exercises;

@@ -1,0 +1,23 @@
+{% extends "layout.html" %}
+{% block body %}
+  <h2>Forgot Password</h2>
+  {% if error %}<p class=error><strong>Error:</strong> {{ error }}{% endif %}
+  {% if answered == True %}
+  <b>CORRECT!</b>
+  {% elif question %}
+  <form action="{{ url_for('forgot') }}" method=post>
+  <dl>
+  <input type="hidden" name=username value="{{ username }}">
+  <dt>{{ question }}:
+  <dd><input type=text name=answer><br><br>
+  <dd><input type=submit value="Answer">
+  </dl> 
+  {% else %}
+  <form action="{{ url_for('forgot') }}" method=post>
+  <dl>
+    <dt>Username:
+    <dd><input type=text name=username><br><br>
+    <dd><input type=submit value="Submit">
+  </dl>
+  {% endif %}
+{% endblock %}
