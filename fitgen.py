@@ -274,29 +274,66 @@ def register():
 
 @app.route('/forgot', methods=['GET', 'POST'])
 def forgot():
-###NOT DONE###
+###CLEAN UP###
     """asks the user for their username, passes the secret question"""
     if request.method == 'POST':
+        # I can probably just query once, I should change this
         query = "SELECT id, secret_question, secret_answer from users "
         query += "WHERE login_name='" + request.form['username'] + "';"
         exc = query_db(query)
-        try:
-           temp_hash = hashlib.sha1()
-           temp_hash.update(str(exc[0]['id']) + request.form['answer'] + SALT2)
-           temp_pass = temp_hash.hexdigest()
-           if temp_pass == exc[0]['secret_answer']:
-               answer = True
-           else:
-               answer = False
-           del(temp_hash)
-           del(temp_pass)
-           del(exc)
-           return render_template('forgot.html', username=request.form['username'], \
-                                      answered=answer)
-        except:
-            return render_template('forgot.html', username=request.form['username'], \
+        
+        if not exc:
+            return render_template('forgot.html', error='Invalid username')
+        answer = False
+
+        if request.form['answered'] == "True":
+            error = None
+            if len(request.form['password1']) < 8:
+                error = "Passwords must be at least 8 characters"
+            elif request.form['password1'].isalpha() or request.form['password1'].isnumeric():
+                error = "Passwords must have a mix of alpha and numeric characters"
+            elif request.form['password1'] != request.form['password2']:
+                error = "Passwords do not match"       
+                    
+            if error == None:
+                user_hash = hashlib.sha1()
+                user_hash.update(str(exc[0]['id']) + request.form['password1'] + SALT)
+                user_pass = user_hash.hexdigest()
+
+                try:
+                    query = "UPDATE users SET password='" + user_pass + "' where login_name='" + request.form['username'] + "';"
+                    print query
+                    g.db.execute(query)
+                    g.db.commit()
+                    # delete the password asap
+                    del(user_hash)
+                    del(user_pass)
+                    del(exc)
+                    flash("Password changed")
+                    return redirect(url_for('index'))
+                except:
+                    error = "error inserting into database"                   
+                    return render_template('forgot.html')
+            else:
+                return render_template('forgot.html', error=error)
+        else:
+            try:
+                temp_hash = hashlib.sha1()
+                temp_hash.update(str(exc[0]['id']) + request.form['answer'] + SALT2)
+                temp_pass = temp_hash.hexdigest()
+                if temp_pass == exc[0]['secret_answer']:
+                    answer = True
+                    del(temp_hash)
+                    del(temp_pass)
+                    del(exc)
+                    return render_template('forgot.html', username=request.form['username'], \
+                                               answered=answer)
+                else:
+                    return render_template('forgot.html', error='Invalid answer')
+            except:
+                return render_template('forgot.html', username=request.form['username'], \
                                        question=exc[0]['secret_question'], answered=False)
-    else:
+    else:  
         return render_template('forgot.html')
 
 @app.route('/workout', methods=['POST'])

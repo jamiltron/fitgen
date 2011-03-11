@@ -3,21 +3,34 @@
   <h2>Forgot Password</h2>
   {% if error %}<p class=error><strong>Error:</strong> {{ error }}{% endif %}
   {% if answered == True %}
-  <b>CORRECT!</b>
+  <form action="{{ url_for('forgot') }}" method=post>
+    <dl>
+      <input type="hidden" name=answered value="True">
+      <input type="hidden" name=username value="{{ username }}">
+      <dt>New password:
+      <dd><input type=password name=password1>
+      <dt>Retype password:
+      <dd><input type=password name=password2>
+      <dd><input type=submit value="Change">
+    </dl>
   {% elif question %}
   <form action="{{ url_for('forgot') }}" method=post>
-  <dl>
-  <input type="hidden" name=username value="{{ username }}">
-  <dt>{{ question }}:
-  <dd><input type=text name=answer><br><br>
-  <dd><input type=submit value="Answer">
-  </dl> 
+    <dl>
+      <input type="hidden" name=answered value="False">
+      <input type="hidden" name=username value="{{ username }}">
+      <dt>{{ question }}:
+      <dd><input type=text name=answer><br><br>
+      <dd><input type=submit value="Answer">
+    </dl> 
+  </form>
   {% else %}
   <form action="{{ url_for('forgot') }}" method=post>
-  <dl>
-    <dt>Username:
-    <dd><input type=text name=username><br><br>
-    <dd><input type=submit value="Submit">
-  </dl>
+    <dl>
+      <dt>Username:
+      <input type="hidden" name=answered value="False">
+      <dd><input type=text name=username><br><br>
+      <dd><input type=submit value="Submit">
+    </dl>
+  </form>
   {% endif %}
 {% endblock %}
