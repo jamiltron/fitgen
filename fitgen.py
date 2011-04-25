@@ -1,11 +1,3 @@
-################################################################################
-# fitgen.py                                                                    #
-# by Justin Hamilton                                                           #
-#                                                                              #
-# This is super hacky. I am only able to work on this in my free time, so I am #
-# currently trying to get a working 'prototype' up before I refine the code    #
-# and make it more  presentable                                                #
-################################################################################
 import sqlite3
 import hashlib
 from flask import Flask, request, session, g, redirect, url_for, \
@@ -23,14 +15,14 @@ SALT2 = 'm0_sec23T'
 equip_list = ['barbell', 'dumbell', 'kettlebell', 'bench',
               'rack', 'pullup', 'box', 'jumprope', 'bike',
               'rower', 'elliptical', 'climber', 'pool', 'exercise_ball', 
-              'medicine_ball', 'leg_press', 'leg_extension', 'glute_ham_chair',
-              'smith_machine']
+              'medicine_ball', 'leg_press', 'leg_extension', 
+              'glute_ham_chair', 'smith_machine']
 type_list = ['weights', 'bodyweight', 'cardio']
 muscle_dict = {'upper': ['back', 'arms', 'chest'],
                'lower': ['legs'],
                'full': ['back', 'arms', 'chest', 'legs', 'core']}
-equip_dict = {'barbell': 'Barbell + Weights', 'bench': 'Bench', 'bike': 'Bike',
-              'box': 'Box', 'dumbell': 'Dumbells', 
+equip_dict = {'barbell': 'Barbell + Weights', 'bench': 'Bench',
+              'bike': 'Bike', 'box': 'Box', 'dumbell': 'Dumbells', 
               'elliptical': 'Elliptical Machine', 
               'exercise_ball': 'Exercise Ball', 
               'glute_ham_chair': 'Glute Ham Chair',
@@ -48,25 +40,30 @@ app.config.from_object(__name__)
 app.config.from_envvar('FITGEN_SETTINGS', silent=True)
 
 def connect_db():
+    """Returns a connection to the database specified in the 
+    global variables DATABASE"""
     return sqlite3.connect(app.config['DATABASE'])
 
 def init_db():
+    """Initializes the database"""
     with closing(connect_db()) as db:
         with app.open_resource('schema.sql') as f:
             db.cursor().executescript(f.read())
         db.commit()
 
 def query_db(query, args=(), one=False):
-    cur = g.db.execute(query, args)
-    rv = [dict((cur.description[idx][0], value)
-               for idx, value in enumerate(row)) for row in cur.fetchall()]
+    """Returns the supplied query to the connected database. args allows
+    supplying arguments used by g.db's execute function, and one allows
+    a limitation of one returned result"""
+    curr = g.db.execute(query, args)
+    rv = [dict((curr.description[idx][0], value)
+               for idx, value in enumerate(row)) for row in curr.fetchall()]
     return (rv[0] if rv else None) if one else rv
 
 def build_query(muscles=[], types=[], equip=[], force=None, limit=1):
-    """takes a list of muscles, workout types, equipment to exclude
+    """Takes a list of muscles, workout types, equipment to exclude
     and the number of exercises to generate in a workout, returning the 
     sql query neccessary to build a workout"""
-
     query = "SELECT workout_name FROM exercises WHERE ("    
 
     # add the muscle selection(s) to the query
@@ -112,7 +109,8 @@ def after_request(response):
 
 @app.route('/cpanel', methods=['GET', 'POST'])
 def cpanel():
-    """registered user's control panel"""
+    """Registered user's control panel, allows the updating of user
+    information such as email, password, and owned equipment."""
     global equip_list
     query = ""
     owned_list = []
@@ -122,17 +120,19 @@ def cpanel():
         insert_query = ""
         changed = False
         for x in equip_list:
-            print "trying: " + x
-            try:
-                print request.form[x]
-                if request.form[x]:
-                    insert_query += x + "=1,"
-                    changed = True
-            except:
+            # iterate through the equip list, building a list of 
+            # equipment values based on if the request form has it
+            # checked or not
+            if x in request.form:
+                insert_query += x + "=1,"
+                changed = True
+            else:
                 insert_query += x + "=0,"
                 changed = True
         if changed:
-            insert_query = "UPDATE USERS set " + insert_query[:len(insert_query)-1]
+            # add the beginning to the query and chop off the last comma
+            insert_query = "UPDATE USERS set " + \
+                insert_query[:len(insert_query)-1]
             insert_query += " WHERE login_name='"
             insert_query += str(session['username']) + "';"
             print "INSERT QUERY: " + insert_query
@@ -140,6 +140,7 @@ def cpanel():
                 g.db.execute(insert_query)
                 g.db.commit()
                 flash("Equipment updated")
+                return redirect(url_for('index'))
             except:
                 error = "error inserting into database"
 
@@ -147,12 +148,14 @@ def cpanel():
         if session['logged_in']:
             for x in equip_list:
                 query += x + ','
-            query = "SELECT " + query[:len(query) - 1] + " FROM users WHERE login_name='" + \
-            str(session['username']) + "';"            
+            query = "SELECT " + query[:len(query) - 1] + \
+                " FROM users WHERE login_name='" + \
+                str(session['username']) + "';"            
             exc = query_db(query)
             for x in exc:
                 owned = x
-            return render_template('cpanel.html', owned=owned, equip_names=equip_dict, error = error)
+            return render_template('cpanel.html', owned=owned, \
+                                       equip_names=equip_dict, error = error)
     except:
         return redirect(url_for('login'))
 
@@ -222,7 +225,8 @@ def register():
         # verify passwords
         if len(request.form['password1']) < 8:
             error = "Passwords must be at least 8 characters"
-        elif request.form['password1'].isalpha() or request.form['password1'].isnumeric():
+        elif request.form['password1'].isalpha() or \
+                request.form['password1'].isnumeric():
             error = "Passwords must have a mix of alpha and numeric characters"
         elif request.form['password1'] != request.form['password2']:
             error = "Passwords do not match"        
@@ -274,7 +278,6 @@ def register():
 
 @app.route('/forgot', methods=['GET', 'POST'])
 def forgot():
-###CLEAN UP###
     """asks the user for their username, passes the secret question"""
     if request.method == 'POST':
         # I can probably just query once, I should change this
@@ -290,18 +293,21 @@ def forgot():
             error = None
             if len(request.form['password1']) < 8:
                 error = "Passwords must be at least 8 characters"
-            elif request.form['password1'].isalpha() or request.form['password1'].isnumeric():
+            elif request.form['password1'].isalpha() or \
+                    request.form['password1'].isnumeric():
                 error = "Passwords must have a mix of alpha and numeric characters"
             elif request.form['password1'] != request.form['password2']:
                 error = "Passwords do not match"       
                     
             if error == None:
                 user_hash = hashlib.sha1()
-                user_hash.update(str(exc[0]['id']) + request.form['password1'] + SALT)
+                user_hash.update(str(exc[0]['id']) + request.form['password1'] + \
+                                     SALT)
                 user_pass = user_hash.hexdigest()
 
                 try:
-                    query = "UPDATE users SET password='" + user_pass + "' where login_name='" + request.form['username'] + "';"
+                    query = "UPDATE users SET password='" + user_pass + \
+                        "' where login_name='" + request.form['username'] + "';"
                     print query
                     g.db.execute(query)
                     g.db.commit()
@@ -326,13 +332,16 @@ def forgot():
                     del(temp_hash)
                     del(temp_pass)
                     del(exc)
-                    return render_template('forgot.html', username=request.form['username'], \
+                    return render_template('forgot.html', \
+                                               username=request.form['username'], \
                                                answered=answer)
                 else:
                     return render_template('forgot.html', error='Invalid answer')
             except:
-                return render_template('forgot.html', username=request.form['username'], \
-                                       question=exc[0]['secret_question'], answered=False)
+                return render_template('forgot.html', \
+                                           username=request.form['username'], \
+                                           question=exc[0]['secret_question'], \
+                                           answered=False)
     else:  
         return render_template('forgot.html')
 
