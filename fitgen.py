@@ -219,7 +219,7 @@ def logout():
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
-    """enters user information into the database"""
+    """Enters user information into the database, then redirects them to the login page"""
     error = None
     if request.method == 'POST':
         # verify passwords
@@ -272,6 +272,7 @@ def register():
                 del(secret_hash)
                 del(secret_pass)
                 flash("New user " + request.form['username'] + " registered.")
+                return redirect(url_for('login'))
             except:
                 error = "error inserting into database"
     return render_template('register.html', error=error)
