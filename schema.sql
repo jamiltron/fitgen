@@ -28,6 +28,13 @@ create table users (
        secret_answer string not null
 );
 
+drop table if exists workouts;
+create table workouts (
+       id integer primary key autoincrement,
+       user_saved string not null,
+       exercises string not null
+);
+
 drop table if exists exercises;
 create table exercises (
        id integer primary key autoincrement,

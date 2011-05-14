@@ -7,6 +7,15 @@
      <li><em>Unbelievable. No exercises here so far.</em>
   {% endfor %}
   </ul>
+  {% if session.logged_in %}
+  <form action="{{ url_for('save_workout') }}" method=post class=add-entry>
+    <dl>
+      <dd><input type=hidden name=entries value="{{ entries }}">
+      <dd><input type=submit value="Save this Workout">
+    </dl>
+  </form>
+  {% endif %}
+  <br>
   <br>
   <a href="{{ url_for('index') }}"><b>Return home</b></a>
 {% endblock %}

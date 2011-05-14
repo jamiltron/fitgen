@@ -1,12 +1,10 @@
 TODO
-+ Format results (maybe add more information than just name)
 + Learn SQLAlchemy
 + Allow the declining of an exercise from a generated list
 + Implement an "admin" screen to modify exercise lists more gracefully
-+ Add more exercises
 + Allow users to change passwords
-+ Add captchas or something like it to registration
-+ Allow users to save specific workouts
 + Look into Facebook integration
 + /Maybe/ allow users to add new equipment and exercises
++ Make sure users cannot save too many workouts
++ Allow users to delete workouts
 

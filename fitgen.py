@@ -93,8 +93,6 @@ def build_query(muscles=[], types=[], equip=[], force=None, limit=1):
                 query += " AND "
             query += equip[i] + " != 1" 
         query += ') ORDER BY RANDOM() LIMIT ' + str(limit) + ";"
-    
-    # print the query for shoddy debugging purposes and then
     print query
     return query      
 
@@ -135,7 +133,6 @@ def cpanel():
                 insert_query[:len(insert_query)-1]
             insert_query += " WHERE login_name='"
             insert_query += str(session['username']) + "';"
-            print "INSERT QUERY: " + insert_query
             try:
                 g.db.execute(insert_query)
                 g.db.commit()
@@ -206,9 +203,22 @@ def login():
 def termsofservice():
     return render_template('termsofservice.html')
 
+@app.route('/save_workout', methods=['POST'])
+def save_workout():
+    """Records the currently-generated workout to the workouts database
+    with the corresponding user's name attached to it"""
+    if not session.get('logged_in'):
+        abort(401)
+    to_save = request.form['entries'].replace('[', '').replace(']', '')
+    g.db.execute('insert into workouts (user_saved, exercises) values (?, ?)',
+                 [session.get('username'), to_save])
+    g.db.commit()
+    flash("Workout saved successfully")
+    return redirect(url_for('index'))
+
 @app.route('/logout')
 def logout():
-    """pops the user's information off of the session stack and returns
+    """Pops the user's information off of the session stack and returns
     a flash message stating this has been done"""
     session.pop('logged_in', None)
     session.pop('username', None)
@@ -348,7 +358,7 @@ def forgot():
 
 @app.route('/workout', methods=['POST'])
 def random_workout():    
-    """the logic behind the random workout"""
+    """The logic behind the random workout"""
     if request.method == 'POST':
         global equip_list, muscle_dict, type_list
         equip_exclude = []
